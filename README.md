@@ -20,7 +20,7 @@ these slices are uploaded to the Raspberry pi 2 and when the trigger 'start prin
 Todo
 -----
 V0.0000001
-The current version only retrieves a slice from the windows WCF host.
+The current version retrieves a slice from the windows WCF host and displayes on display.
 
 More will be updated here
 
