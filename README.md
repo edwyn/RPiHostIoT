@@ -1,5 +1,4 @@
-# RPiHostIoT
-RPHost for the Raspberry Pi 2 on Windows 10 IoT
+RPiHost for the Raspberry Pi 2 on Windows 10 IoT
 =============
 This is a first attempt to re-use code from CreationWorkshop on windows 10 IoT.
 
@@ -20,6 +19,9 @@ these slices are uploaded to the Raspberry pi 2 and when the trigger 'start prin
 
 Todo
 -----
+V0.0000001
+The current version only retrieves a slice from the windows WCF host.
+
 More will be updated here
 
 ```ruby
