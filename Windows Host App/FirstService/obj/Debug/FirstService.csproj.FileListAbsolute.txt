@@ -1,0 +1,6 @@
+C:\dev\git\wcf_tut\First\FirstService\bin\Debug\FirstService.exe.config
+C:\dev\git\wcf_tut\First\FirstService\bin\Debug\FirstService.exe
+C:\dev\git\wcf_tut\First\FirstService\bin\Debug\FirstService.pdb
+C:\dev\git\wcf_tut\First\FirstService\obj\Debug\FirstService.csprojResolveAssemblyReference.cache
+C:\dev\git\wcf_tut\First\FirstService\obj\Debug\FirstService.exe
+C:\dev\git\wcf_tut\First\FirstService\obj\Debug\FirstService.pdb

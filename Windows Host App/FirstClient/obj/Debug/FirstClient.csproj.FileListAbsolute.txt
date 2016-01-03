@@ -1,0 +1,6 @@
+C:\dev\git\wcf_tut\First\FirstClient\bin\Debug\FirstClient.exe.config
+C:\dev\git\wcf_tut\First\FirstClient\bin\Debug\FirstClient.exe
+C:\dev\git\wcf_tut\First\FirstClient\bin\Debug\FirstClient.pdb
+C:\dev\git\wcf_tut\First\FirstClient\obj\Debug\FirstClient.exe
+C:\dev\git\wcf_tut\First\FirstClient\obj\Debug\FirstClient.pdb
+C:\dev\git\wcf_tut\First\FirstClient\obj\Debug\FirstClient.csprojResolveAssemblyReference.cache

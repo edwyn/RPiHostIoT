@@ -1,0 +1,2 @@
+C:\Users\stape\Downloads\samples-develop\App2App WebServer\WebServerApp\WebServer\WebServer.csproj;arm
+C:\Users\stape\Downloads\samples-develop\App2App WebServer\WebServerApp\WebServerTask\WebServerTask.csproj;arm
