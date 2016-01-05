@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.ServiceModel;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.AppService;
 using Windows.Devices.Gpio;
 using Windows.Foundation.Collections;
@@ -79,12 +80,48 @@ namespace BlinkyWebService
             {
                 case "On":
                     {
+                        byte[][] images = null;
+                        BitmapImage[] bitmaps = null;
                         await Dispatcher.RunAsync(
                               CoreDispatcherPriority.High,
-                             () =>
-                             {
-                                 RetrieveImage();
-                             });
+                            () =>
+                            {
+                                try
+                                {
+                                    images = RetrieveImage();
+                                    bitmaps = new BitmapImage[images.Length];
+                                    MemoryStream mystream;
+                                    for (int i = 0; i < images.Length; i++)
+                                    {
+                                        mystream = new MemoryStream(images[i]);
+                                        var randomAccessStream = new MemoryRandomAccessStream(mystream);
+                                        bitmaps[i] = new BitmapImage();
+                                        bitmaps[i].SetSourceAsync(randomAccessStream);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    // status.Text = ex.Message;
+                                    //Cleanup();
+                                }
+                            });
+                        for (int j = 0; j < bitmaps.Length; j++)
+                        {
+                            try
+                            {
+                                await Dispatcher.RunAsync(
+                                  CoreDispatcherPriority.High,
+                                 () =>
+                                 {
+                                     Task.Delay(1000).Wait();
+                                     captureImage.Source = bitmaps[j];
+                                     GpioStatus.Text = "Test Slice: " + string.Format("{0}", j);
+                                 });
+                            }
+                            catch (Exception ex)
+                            {
+                            }
+                        }
                         break;
                     }
                 case "Off":
@@ -145,7 +182,7 @@ namespace BlinkyWebService
         //        FlipLED();
         //    }
         //}
-        private void RetrieveImage()
+        private byte[][] RetrieveImage()
         {
             //setup wcf service
             const string serviceURL = "net.tcp://192.168.0.109/MyFirstService";
@@ -167,23 +204,29 @@ namespace BlinkyWebService
 
             //step one get array of filenames
             //get byte arrays from files
-            string filename = proxy.SendMessage(string.Format("{0}", Guid.NewGuid()));
-            byte[] image = proxy.GetImageBytes(string.Format("{0}", Guid.NewGuid()));
-
-            try
+            string[] filename = proxy.SendMessage(string.Format("{0}", Guid.NewGuid()));
+            byte[][] images = new byte[filename.Length][];
+            //byte[] image = proxy.GetImageBytes(string.Format("{0}", Guid.NewGuid()));
+            //return proxy.GetImageBytes(string.Format("{0}", Guid.NewGuid()));
+            for (int i = 0; i < filename.Length; i++)
             {
-                BitmapImage bitmap = new BitmapImage();
-                MemoryStream mystream = new MemoryStream(image);
-                var randomAccessStream = new MemoryRandomAccessStream(mystream);
-                bitmap.SetSourceAsync(randomAccessStream);
+                images[i] = proxy.GetImageBytes(string.Format("{0}", filename[i]));
+            }
+            return images;
+            //try
+            //{
+            //    BitmapImage bitmap = new BitmapImage();
+            //    MemoryStream mystream = new MemoryStream(image);
+            //    var randomAccessStream = new MemoryRandomAccessStream(mystream);
+            //    bitmap.SetSourceAsync(randomAccessStream);
 
-                captureImage.Source = bitmap;
-            }
-            catch (Exception ex)
-            {
-                // status.Text = ex.Message;
-                //Cleanup();
-            }
+            //    captureImage.Source = bitmap;
+            //}
+            //catch (Exception ex)
+            //{
+            //    // status.Text = ex.Message;
+            //    //Cleanup();
+            //}
         }
 
         private int LEDStatus = 0;

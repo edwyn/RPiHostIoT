@@ -31,8 +31,8 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Canvas Name="PhotoCanvas" Grid.Row="1" Grid.Column="1" Width="200" Height="200" Visibility="Visible">
-                <Image x:Name="captureImage" Width="200" Height="200" Visibility="Visible"/>
+            <Canvas Name="PhotoCanvas" Grid.Row="1" Grid.Column="1" Width="400" Height="400" Visibility="Visible">
+                <Image x:Name="captureImage" Width="400" Height="400" Visibility="Visible"/>
             </Canvas>
             
             <TextBlock x:Name="StateText" Text="OFF" Margin="10" TextAlignment="Center" FontSize="26.667" />

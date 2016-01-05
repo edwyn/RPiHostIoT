@@ -9,42 +9,28 @@ namespace FirstService
 {
     public class Service : IService
     {
-        public string SendMessage(string message)
+        public string[] SendMessage(string message)
         {
+            string[] filenames = new string[10];
+            filenames[0] = "tests0000.png";
+            filenames[1] = "tests0001.png";
+            filenames[2] = "tests0002.png";
+            filenames[3] = "tests0003.png";
+            filenames[4] = "tests0004.png";
+            filenames[5] = "tests0005.png";
+            filenames[6] = "tests0006.png";
+            filenames[7] = "tests0007.png";
+            filenames[8] = "tests0008.png";
+            filenames[9] = "tests0009.png";
             Console.WriteLine("Message is {0} received at {1}", message, DateTime.Now);
-            return "tests0001.png";
+            return filenames;
         }
 
         public byte[] GetImageBytes(string message)
         {
             Console.WriteLine("GetImageBytes: Message is {0} received at {1}", message, DateTime.Now);
-            string afilePath = @"C:\dev\git\wcf_tut\First\FirstService\images\tests0000.png";
+            string afilePath = @"C:\dev\git\wcf_tut\First\FirstService\images\" + message;//tests0000.png";
             return System.IO.File.ReadAllBytes(afilePath);
         }
-
-        public Stream GetFileStream(string message)
-        {
-            Console.WriteLine("GetFileStream: Message is {0} received at {1}", message, DateTime.Now);
-            string afilePath = @"C:\dev\git\wcf_tut\First\FirstService\images\tests0000.png";
-            FileStream stream = new FileStream(afilePath, FileMode.Open, FileAccess.Read);
-            return stream;
-        }
-
-        public FileData GetFileData()
-        {
-           // string filePath = "C:\\dev\\git\\wcf_tut\\First\\FirstService\\images\\tests0000.png";
-            string afilePath = @"C:\dev\git\wcf_tut\First\FirstService\images\tests0000.png";
-            FileData streamData = new FileData();
-            //byte[] image = System.IO.File.ReadAllBytes(afilePath);
-            
-            streamData.BufferData = System.IO.File.ReadAllBytes(afilePath);
-            Console.WriteLine("Debug: File Size : " + streamData.BufferData.Length);
-            streamData.FileName = "tests0001.png";
-            streamData.FilePosition = 0;
-            //streamData.BufferData = Convert.ToBase64String(System.IO.File.ReadAllBytes(filePath));
-            return streamData;
-        }
-
-        
     }
 }

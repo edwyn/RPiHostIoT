@@ -11,7 +11,7 @@ namespace BlinkyWebService
     public interface IService
     {
         [OperationContract]
-        string SendMessage(string message);
+        string[] SendMessage(string message);
 
         [OperationContract]
         byte[] GetImageBytes(string message);
