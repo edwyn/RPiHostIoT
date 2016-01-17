@@ -17,5 +17,8 @@ namespace FirstService
 
         [OperationContract]
         byte[] GetImageBytes(string message);
+
+        [OperationContract]
+        string[] SendGcode(string message);
     }
 }

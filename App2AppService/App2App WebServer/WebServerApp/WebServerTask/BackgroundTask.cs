@@ -82,8 +82,9 @@ namespace WebServerTask
 
     public sealed class HttpServer : IDisposable
     {
-        string offHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" checked onclick=\"this.form.submit()\"> Off</form></body></html>";
-        string onHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" checked onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off</form></body></html>";
+        string offHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" checked onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form></body></html>";
+        string onHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" checked onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form></body></html>";
+        string startHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\"  onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" checked onclick=\"this.form.submit()\"> Start</form></body></html>";
         private const uint BufferSize = 8192;
         private int port = 8000;
         private readonly StreamSocketListener listener;
@@ -144,25 +145,35 @@ namespace WebServerTask
             // See if the request is for blinky.html, if yes get the new state
             string state = "Unspecified";
             bool stateChanged = false;
+            string html = offHtmlString; // default off
             if (request.Contains("blinky.html?state=on"))
             {
                 state = "On";
                 stateChanged = true;
+                html = onHtmlString;
             }
             else if (request.Contains("blinky.html?state=off"))
             {
                 state = "Off";
                 stateChanged = true;
+                html = offHtmlString;
+            }
+            else if (request.Contains("blinky.html?state=start"))
+            {
+                state = "Start";
+                stateChanged = true;
+                html = startHtmlString;
             }
 
             if (stateChanged)
             {
                 var updateMessage = new ValueSet();
                 updateMessage.Add("State", state);
-                var responseStatus = await appServiceConnection.SendMessageAsync(updateMessage);
+                //avar responseStatus = await appServiceConnection.SendMessageAsync(updateMessage);
+                appServiceConnection.SendMessageAsync(updateMessage);
             }
 
-            string html = state == "On" ? onHtmlString : offHtmlString; 
+            //string html = state == "On" ? onHtmlString : offHtmlString; 
             // Show the html 
             using (Stream resp = os.AsStreamForWrite())
                 {

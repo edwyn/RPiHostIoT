@@ -26,6 +26,25 @@ namespace FirstService
             return filenames;
         }
 
+        public string[] SendGcode(string message)
+        {
+            string m_gcode = null;
+            string[] gcodelines;
+            string m_OutputFolder = @"C:\dev\git\wcf_tut\First\FirstService\images\";
+
+            var files = Directory.EnumerateFiles(m_OutputFolder, "*.*", SearchOption.AllDirectories)
+            .Where(s => s.EndsWith(".gcode"));
+
+            //Path to gcode file
+            m_gcode = (string)files.First();
+
+            //fill string arry with content gcode file
+            gcodelines = File.ReadAllLines(m_gcode);
+
+            return gcodelines;
+
+        }
+
         public byte[] GetImageBytes(string message)
         {
             Console.WriteLine("GetImageBytes: Message is {0} received at {1}", message, DateTime.Now);

@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.AppService;
@@ -56,6 +58,9 @@ namespace BlinkyWebService
             appServiceConnection.PackageFamilyName = "WebServer_1w720vyc4ccym";
             appServiceConnection.AppServiceName = "App2AppComService";
 
+            m_sf = new SlicedFiles();
+            m_gcode = new GCodeFile();
+
             // Send a initialize request 
             var res = await appServiceConnection.OpenAsync();
             if (res == AppServiceConnectionStatus.Success)
@@ -80,7 +85,7 @@ namespace BlinkyWebService
             {
                 case "On":
                     {
-                        byte[][] images = null;
+                       // byte[][] images = null;
                         BitmapImage[] bitmaps = null;
                         await Dispatcher.RunAsync(
                               CoreDispatcherPriority.High,
@@ -88,40 +93,52 @@ namespace BlinkyWebService
                             {
                                 try
                                 {
-                                    images = RetrieveImage();
-                                    bitmaps = new BitmapImage[images.Length];
+                                    RetrieveData();
+
+                                    
+                                    BitmapImage bitmap;// =  BitmapImage();
+                                    bitmaps = new BitmapImage[m_sf.NumSlices];
+                                    m_sf.Images = new BitmapImage[m_sf.NumSlices];
+                                    m_sf.Imgs = new List<BitmapImage>(m_sf.NumSlices);
                                     MemoryStream mystream;
-                                    for (int i = 0; i < images.Length; i++)
+                                    foreach (var slice in m_sf.Slices)
                                     {
-                                        mystream = new MemoryStream(images[i]);
+                                        mystream = new MemoryStream(slice);
                                         var randomAccessStream = new MemoryRandomAccessStream(mystream);
-                                        bitmaps[i] = new BitmapImage();
-                                        bitmaps[i].SetSourceAsync(randomAccessStream);
+                                        bitmap = new BitmapImage();
+                                        bitmap.SetSourceAsync(randomAccessStream);
+                                        m_sf.Imgs.Add(bitmap);
                                     }
+                                    m_sf.Slices = null;
                                 }
                                 catch (Exception ex)
                                 {
                                     // status.Text = ex.Message;
                                     //Cleanup();
                                 }
+
+                                GpioStatus.Text = "Print Ready";
                             });
-                        for (int j = 0; j < bitmaps.Length; j++)
-                        {
-                            try
-                            {
-                                await Dispatcher.RunAsync(
-                                  CoreDispatcherPriority.High,
-                                 () =>
-                                 {
-                                     Task.Delay(1000).Wait();
-                                     captureImage.Source = bitmaps[j];
-                                     GpioStatus.Text = "Test Slice: " + string.Format("{0}", j);
-                                 });
-                            }
-                            catch (Exception ex)
-                            {
-                            }
-                        }
+
+                        //foreach (var item in m_sf.Imgs((value, i) => new { i, value }))
+                        
+                        //for (int j = 0; j < m_sf.NumSlices; j++)
+                        //{
+                        //    try
+                        //    {
+                        //        await Dispatcher.RunAsync(
+                        //          CoreDispatcherPriority.High,
+                        //         () =>
+                        //         {
+                        //             Task.Delay(2000).Wait();
+                        //             captureImage.Source = m_sf.GetImageAt(j);//[j];
+                        //             GpioStatus.Text = "Test Slice: " + string.Format("{0}", j);
+                        //         });
+                        //    }
+                        //    catch (Exception ex)
+                        //    {
+                        //    }
+                        //}
                         break;
                     }
                 case "Off":
@@ -134,6 +151,30 @@ namespace BlinkyWebService
                         // });
                         break;
                     }
+                case "Start":
+                {
+                        if(m_sf.Imgs != null)
+                        { 
+                            foreach (var image in m_sf.Imgs)
+                            {
+                                try
+                                {
+                                    await Dispatcher.RunAsync(
+                                        CoreDispatcherPriority.High,
+                                        () =>
+                                        {
+                                            Task.Delay(2000).Wait();
+                                            captureImage.Source = image;
+                                        //GpioStatus.Text = "Test Slice: " + string.Format("{0}", m_sf.Imgs.);
+                                        });
+                                }
+                                catch (Exception ex)
+                                {
+                                }
+                            }
+                        }
+                    break;
+                }
                 case "Unspecified":
                 default:
                     {
@@ -142,47 +183,10 @@ namespace BlinkyWebService
                     }
             }
         }
-
-        //private void FlipLED()
-        //{
-        //    if (LEDStatus == 0)
-        //    {
-        //        LEDStatus = 1;
-        //        if (pin != null)
-        //        {
-        //            // to turn on the LED, we need to push the pin 'low'
-        //            pin.Write(GpioPinValue.Low);
-        //        }
-        //        LED.Fill = redBrush;
-        //        StateText.Text = "On";
-        //    }
-        //    else
-        //    {
-        //        LEDStatus = 0;
-        //        if (pin != null)
-        //        {
-        //            pin.Write(GpioPinValue.High);
-        //        }
-        //        LED.Fill = grayBrush;
-        //        StateText.Text = "Off"; 
-        //    }
-        //}
-
-        //private void TurnOffLED()
-        //{
-        //    if (LEDStatus == 1)
-        //    {
-        //        FlipLED();
-        //    }
-        //}
-        //private void TurnOnLED()
-        //{
-        //    if (LEDStatus == 0)
-        //    {
-        //        FlipLED();
-        //    }
-        //}
-        private byte[][] RetrieveImage()
+        /// <summary>
+        /// Retrieves data from Host(gcode, sliced images)
+        /// </summary>
+        private void RetrieveData()
         {
             //setup wcf service
             const string serviceURL = "net.tcp://192.168.0.109/MyFirstService";
@@ -205,32 +209,25 @@ namespace BlinkyWebService
             //step one get array of filenames
             //get byte arrays from files
             string[] filename = proxy.SendMessage(string.Format("{0}", Guid.NewGuid()));
+            m_sf.Filenames = filename;
+
+            //Receive Gcode file as string array, each item in the array representing a line
+            string[] gcodelines = proxy.SendGcode(string.Format("{0}", Guid.NewGuid()));
+            m_gcode.Lines = gcodelines;
+            
+            //Receive byte array per image and store 
             byte[][] images = new byte[filename.Length][];
-            //byte[] image = proxy.GetImageBytes(string.Format("{0}", Guid.NewGuid()));
-            //return proxy.GetImageBytes(string.Format("{0}", Guid.NewGuid()));
             for (int i = 0; i < filename.Length; i++)
             {
                 images[i] = proxy.GetImageBytes(string.Format("{0}", filename[i]));
             }
-            return images;
-            //try
-            //{
-            //    BitmapImage bitmap = new BitmapImage();
-            //    MemoryStream mystream = new MemoryStream(image);
-            //    var randomAccessStream = new MemoryRandomAccessStream(mystream);
-            //    bitmap.SetSourceAsync(randomAccessStream);
-
-            //    captureImage.Source = bitmap;
-            //}
-            //catch (Exception ex)
-            //{
-            //    // status.Text = ex.Message;
-            //    //Cleanup();
-            //}
+            m_sf.Slices = images;
         }
 
         private int LEDStatus = 0;
         private const int LED_PIN = 5;
+        private SlicedFiles m_sf;
+        private GCodeFile m_gcode = null; // a reference from the active gcode file
         //private GpioPin pin;
         private SolidColorBrush redBrush = new SolidColorBrush(Windows.UI.Colors.Red);
         private SolidColorBrush grayBrush = new SolidColorBrush(Windows.UI.Colors.LightGray);

@@ -101,12 +101,15 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BuildManager.cs" />
+    <Compile Include="GCodeFile.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="MemoryRandomAccessStream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SlicedFiles.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
