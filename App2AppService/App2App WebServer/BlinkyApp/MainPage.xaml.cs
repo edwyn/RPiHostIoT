@@ -5,12 +5,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.ServiceModel;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.AppService;
 using Windows.Devices.Gpio;
 using Windows.Foundation.Collections;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Maps;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -60,6 +62,14 @@ namespace BlinkyWebService
 
             m_sf = new SlicedFiles();
             m_gcode = new GCodeFile();
+            bm = new BuildManager();
+            zaxis = new AxisControl();
+
+            //initialize USB serial connection
+            zaxis.InitializeConnection("VID_2341", "PID_0010");
+
+
+            tokenSource = new CancellationTokenSource();
 
             // Send a initialize request 
             var res = await appServiceConnection.OpenAsync();
@@ -76,16 +86,90 @@ namespace BlinkyWebService
             }
         }
 
+        ///
+        ///called from buildmanager
+        ///
+        public async void Printstarted(int layer)
+        {
+            await Dispatcher.RunAsync(
+                CoreDispatcherPriority.High,
+                () =>
+                {
+                    GpioStatus.Text = "Print started layer " + layer.ToString();
+                }
+                );
+        }
+
+        public async void PrintDelay(int delaytime)
+        {
+            await Dispatcher.RunAsync(
+                CoreDispatcherPriority.High,
+                () =>
+                {
+                    GpioStatus.Text = "Print delaytime " + delaytime.ToString();
+                }
+                );
+        }
+
+        public async void SetImage(int index)
+        {
+
+            await Dispatcher.RunAsync(
+                                        CoreDispatcherPriority.High,
+                                        () =>
+                                        {
+                                           // Task.Delay(2000).Wait();
+                                            if (index == -1)
+                                            {
+                                                captureImage.Source = null;
+                                                System.GC.Collect();
+                                            }
+                                            else
+                                            {
+                                                MemoryStream mystream = new MemoryStream(m_sf.Slices[index]);
+                                                var randomAccessStream = new MemoryRandomAccessStream(mystream);
+                                                BitmapImage bitmap = new BitmapImage();
+                                                bitmap.SetSourceAsync(randomAccessStream);
+                                                // captureImage.Source = m_sf.Imgs[index];
+                                                captureImage.Source = bitmap;
+                                            }
+                                            
+                                           // GpioStatus.Text = "put image to black";
+                                        });
+        }
+
         private async void OnMessageReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
         {
             var message = args.Request.Message;
             string newState = message["State"] as string;
-           // string startState = message["Start"] as string;
-            switch (newState)
+            string axisControl = message["AxisState"] as string;
+            // string startState = message["Start"] as string;
+            //if ()
+            if (newState.Length > 0 )
+            {
+                PrintState(newState);
+            }
+
+            if (axisControl.Length > 0)
+            {
+                AxisState(axisControl);
+            }
+
+
+        }
+
+        private async void AxisState(string axisState)
+        {
+
+        }
+
+        private async void PrintState(string printState)
+        {
+            switch (printState)
             {
                 case "On":
                     {
-                       // byte[][] images = null;
+                        // byte[][] images = null;
                         BitmapImage[] bitmaps = null;
                         await Dispatcher.RunAsync(
                               CoreDispatcherPriority.High,
@@ -95,21 +179,23 @@ namespace BlinkyWebService
                                 {
                                     RetrieveData();
 
-                                    
-                                    BitmapImage bitmap;// =  BitmapImage();
-                                    bitmaps = new BitmapImage[m_sf.NumSlices];
-                                    m_sf.Images = new BitmapImage[m_sf.NumSlices];
-                                    m_sf.Imgs = new List<BitmapImage>(m_sf.NumSlices);
-                                    MemoryStream mystream;
-                                    foreach (var slice in m_sf.Slices)
-                                    {
-                                        mystream = new MemoryStream(slice);
-                                        var randomAccessStream = new MemoryRandomAccessStream(mystream);
-                                        bitmap = new BitmapImage();
-                                        bitmap.SetSourceAsync(randomAccessStream);
-                                        m_sf.Imgs.Add(bitmap);
-                                    }
-                                    m_sf.Slices = null;
+
+                                    /* BitmapImage bitmap;// =  BitmapImage();
+                                     bitmaps = new BitmapImage[m_sf.NumSlices];
+                                     m_sf.Images = new BitmapImage[m_sf.NumSlices];
+                                     m_sf.Imgs = new List<BitmapImage>(m_sf.NumSlices);
+                                     MemoryStream mystream;
+                                     foreach (var slice in m_sf.Slices)
+                                     {
+                                         mystream = new MemoryStream(slice);
+                                         var randomAccessStream = new MemoryRandomAccessStream(mystream);
+                                         bitmap = new BitmapImage();
+                                         bitmap.SetSourceAsync(randomAccessStream);
+                                         m_sf.Imgs.Add(bitmap);
+                                     }*/
+                                    // m_sf.Slices = null;
+                                    //  System.GC.Collect();
+                                    // captureImage.Source = m_sf.Imgs[0];
                                 }
                                 catch (Exception ex)
                                 {
@@ -121,7 +207,7 @@ namespace BlinkyWebService
                             });
 
                         //foreach (var item in m_sf.Imgs((value, i) => new { i, value }))
-                        
+
                         //for (int j = 0; j < m_sf.NumSlices; j++)
                         //{
                         //    try
@@ -152,29 +238,43 @@ namespace BlinkyWebService
                         break;
                     }
                 case "Start":
-                {
-                        if(m_sf.Imgs != null)
-                        { 
-                            foreach (var image in m_sf.Imgs)
-                            {
-                                try
-                                {
-                                    await Dispatcher.RunAsync(
-                                        CoreDispatcherPriority.High,
-                                        () =>
-                                        {
-                                            Task.Delay(2000).Wait();
-                                            captureImage.Source = image;
-                                        //GpioStatus.Text = "Test Slice: " + string.Format("{0}", m_sf.Imgs.);
-                                        });
-                                }
-                                catch (Exception ex)
-                                {
-                                }
-                            }
-                        }
-                    break;
-                }
+                    {
+                        // BuildManager 
+
+                        //Starting main printer task
+                        var token = tokenSource.Token;
+                        printerTask = Task.Factory.StartNew(() => bm.StartPrint(m_sf, m_gcode, this), token);
+                        /* if (m_sf.Imgs != null)
+                         { 
+                             foreach (var image in m_sf.Imgs)
+                             {
+                                 try
+                                 {
+                                     await Dispatcher.RunAsync(
+                                         CoreDispatcherPriority.High,
+                                         () =>
+                                         {
+                                             Task.Delay(2000).Wait();
+                                             captureImage.Source = image;
+                                         //GpioStatus.Text = "Test Slice: " + string.Format("{0}", m_sf.Imgs.);
+                                         });
+                                 }
+                                 catch (Exception ex)
+                                 {
+                                 }
+                             }
+                         }*/
+                        /* await Dispatcher.RunAsync(
+                                         CoreDispatcherPriority.High,
+                                         () =>
+                                         {
+                                             Task.Delay(2000).Wait();
+                                             captureImage.Source = null;
+                                             GpioStatus.Text = "put image to black";
+                                         });*/
+
+                        break;
+                    }
                 case "Unspecified":
                 default:
                     {
@@ -183,6 +283,8 @@ namespace BlinkyWebService
                     }
             }
         }
+
+
         /// <summary>
         /// Retrieves data from Host(gcode, sliced images)
         /// </summary>
@@ -228,6 +330,11 @@ namespace BlinkyWebService
         private const int LED_PIN = 5;
         private SlicedFiles m_sf;
         private GCodeFile m_gcode = null; // a reference from the active gcode file
+        private Task printerTask = null;
+        private CancellationTokenSource tokenSource = null;// = new CancellationTokenSource();
+        private BuildManager bm;
+        private AxisControl zaxis;
+        //private CancellationToken token;
         //private GpioPin pin;
         private SolidColorBrush redBrush = new SolidColorBrush(Windows.UI.Colors.Red);
         private SolidColorBrush grayBrush = new SolidColorBrush(Windows.UI.Colors.LightGray);
