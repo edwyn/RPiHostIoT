@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Net.Http;
@@ -15,6 +16,8 @@ using System.IO;
 using Windows.Storage.Streams;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Devices.Enumeration;
+using Windows.Devices.SerialCommunication;
 using Windows.Foundation;
 
 namespace WebServerTask
@@ -51,6 +54,7 @@ namespace WebServerTask
                         //Set a result to return to the caller
                         var returnMessage = new ValueSet();
                         HttpServer server = new HttpServer(8000, appServiceConnection);
+                        
                         IAsyncAction asyncAction = Windows.System.Threading.ThreadPool.RunAsync(
                             (workItem) =>
                             {
@@ -80,15 +84,69 @@ namespace WebServerTask
         AppServiceConnection appServiceConnection;
     }
 
+    
+
+
     public sealed class HttpServer : IDisposable
     {
-        string offHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" checked onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form></body></html>";
-        string onHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" checked onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form></body></html>";
-        string startHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\"  onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" checked onclick=\"this.form.submit()\"> Start</form></body></html>";
+        // string offHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" checked onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form></body></html>";
+        // string onHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" checked onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form></body></html>";
+        // string startHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\"  onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" checked onclick=\"this.form.submit()\"> Start</form></body></html>";
+        string offHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" checked onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"^ 10\" onclick=\"window.location.href=\'test.html?axis=up10\';\"/><br><br><input type=\"button\" value=\"^ 1.0\" onclick=\"window.location.href=\'test.html?axis=up1.0\';\"/><br><br><input type=\"button\" value=\"^ 0.1\" onclick=\"window.location.href=\'test.html?axis=up0.1\';\"/><br></form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"v 0.1\" onclick=\"window.location.href=\'test.html?axis=down0.1\';\"/><br><br><input type=\"button\" value=\"v 1.0\" onclick=\"window.location.href=\'test.html?axis=down1.0\';\"/><br><br><input type=\"button\" value=\"v 10\" onclick=\"window.location.href=\'test.html?axis=down10\';\"/><br></form></body></html>";
+        string onHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" checked onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"^ 10\" onclick=\"window.location.href=\'test.html?axis=up10\';\"/><br><br><input type=\"button\" value=\"^ 1.0\" onclick=\"window.location.href=\'test.html?axis=up1.0\';\"/><br><br><input type=\"button\" value=\"^ 0.1\" onclick=\"window.location.href=\'test.html?axis=up0.1\';\"/><br></form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"v 0.1\" onclick=\"window.location.href=\'test.html?axis=down0.1\';\"/><br><br><input type=\"button\" value=\"v 1.0\" onclick=\"window.location.href=\'test.html?axis=down1.0\';\"/><br><br><input type=\"button\" value=\"v 10\" onclick=\"window.location.href=\'test.html?axis=down10\';\"/><br></form></body></html>";
+        string startHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\"  onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" checked onclick=\"this.form.submit()\"> Start</form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"^ 10\" onclick=\"window.location.href=\'test.html?axis=up10\';\"/><br><br><input type=\"button\" value=\"^ 1.0\" onclick=\"window.location.href=\'test.html?axis=up1.0\';\"/><br><br><input type=\"button\" value=\"^ 0.1\" onclick=\"window.location.href=\'test.html?axis=up0.1\';\"/><br></form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"v 0.1\" onclick=\"window.location.href=\'test.html?axis=down0.1\';\"/><br><br><input type=\"button\" value=\"v 1.0\" onclick=\"window.location.href=\'test.html?axis=down1.0\';\"/><br><br><input type=\"button\" value=\"v 10\" onclick=\"window.location.href=\'test.html?axis=down10\';\"/><br></form></body></html>";
+
         private const uint BufferSize = 8192;
         private int port = 8000;
         private readonly StreamSocketListener listener;
         private AppServiceConnection appServiceConnection;
+
+        public String ConnectionType { get; set; }    
+
+        private ObservableCollection<DeviceInformation> listOfDevices = new ObservableCollection<DeviceInformation>();
+
+        private async void ListAvailablePorts()
+        {
+            try
+            {
+                string aqs = SerialDevice.GetDeviceSelector();
+                var dis = await DeviceInformation.FindAllAsync(aqs);
+                
+                offHtmlString = "<html>";
+                for (int i = 0; i < dis.Count; i++)
+                {
+                    offHtmlString += dis[i].Name;
+                    offHtmlString += "<br>";
+                    //                  listOfDevices.Add(dis[i]);
+                    //                dis
+                }
+                offHtmlString += "</html>";
+                // var selectedPort = dis.First();
+                /* serialPort = await SerialDevice.FromIdAsync(selectedPort.Id);
+                
+
+                 serialPort.ReadTimeout = TimeSpan.FromMilliseconds(1000);
+                 serialPort.BaudRate = 9600;
+                 serialPort.Parity = SerialParity.None;
+                 serialPort.StopBits = SerialStopBitCount.One;
+                 serialPort.DataBits = 8;
+
+                 infoBox.Text = "Serial port configured successfully!\n ----- Properties ----- \n";
+                 infoBox.Text += "BaudRate: " + serialPort.BaudRate.ToString() + "\n";
+                 infoBox.Text += "DataBits: " + serialPort.DataBits.ToString() + "\n";
+                 infoBox.Text += "Handshake: " + serialPort.Handshake.ToString() + "\n";
+                 infoBox.Text += "Parity: " + serialPort.Parity.ToString() + "\n";
+                 infoBox.Text += "StopBits: " + serialPort.StopBits.ToString() + "\n";
+
+                 data.Text = "configuring port";
+                 */
+            }
+
+            catch (Exception ex)
+            {
+              //  infoBox.Text = "OOps, Something went wrong! \n" + ex.Message;
+            }
+        }
 
         public HttpServer(int serverPort, AppServiceConnection connection)
         {
@@ -144,7 +202,11 @@ namespace WebServerTask
         {
             // See if the request is for blinky.html, if yes get the new state
             string state = "Unspecified";
+            string axisState = "Unspecified";
             bool stateChanged = false;
+
+           // ListAvailablePorts();
+
             string html = offHtmlString; // default off
             if (request.Contains("blinky.html?state=on"))
             {
@@ -164,13 +226,16 @@ namespace WebServerTask
                 stateChanged = true;
                 html = startHtmlString;
             }
+            
 
             if (stateChanged)
             {
                 var updateMessage = new ValueSet();
                 updateMessage.Add("State", state);
+                updateMessage.Add("AxisState", axisState);
                 //avar responseStatus = await appServiceConnection.SendMessageAsync(updateMessage);
                 appServiceConnection.SendMessageAsync(updateMessage);
+                
             }
 
             //string html = state == "On" ? onHtmlString : offHtmlString; 
