@@ -31,12 +31,12 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Canvas Name="PhotoCanvas" Grid.Row="1" Grid.Column="1" Width="400" Height="400" Visibility="Visible">
-                <Image x:Name="captureImage" Width="400" Height="400" Visibility="Visible"/>
+            <Canvas Name="PhotoCanvas" Grid.Row="0" Grid.Column="1" Width="1440" Height="2560" Visibility="Visible">
+                <Image x:Name="captureImage" Width="1440" Height="2560" Visibility="Visible"/>
             </Canvas>
             
-            <TextBlock x:Name="StateText" Text="OFF" Margin="10" TextAlignment="Center" FontSize="26.667" />
-            <TextBlock x:Name="GpioStatus" Text="Waiting to initialize GPIO..." Margin="10,50,10,10" TextAlignment="Center" FontSize="26.667" />
+            
+           
         </StackPanel>
     </Grid>
 </Page>
