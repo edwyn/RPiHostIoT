@@ -11,7 +11,8 @@ namespace FirstService
     {
         public string[] SendMessage(string message)
         {
-            string m_OutputFolder = @"C:\dev\git\wcf_tut\First\FirstService\images2\";
+            //string m_OutputFolder = @"C:\dev\git\wcf_tut\First\FirstService\images2\";
+            string m_OutputFolder = @"C:\dev\slices\test.slice\";// C:\dev\git\wcf_tut\First\FirstService\images2\"; 
             var files = Directory.EnumerateFiles(m_OutputFolder, "*.*", SearchOption.AllDirectories)
             .Where(s => s.EndsWith(".png"));
             string[] filenames = new string[files.Count()];
@@ -79,7 +80,8 @@ namespace FirstService
         {
             string m_gcode = null;
             string[] gcodelines;
-            string m_OutputFolder = @"C:\dev\git\wcf_tut\First\FirstService\images2\";
+            //string m_OutputFolder = @"C:\dev\git\wcf_tut\First\FirstService\images2\";
+            string m_OutputFolder = @"C:\dev\slices\test.slice\";// C:\dev\git\wcf_tut\First\FirstService\images2\"; 
 
             var files = Directory.EnumerateFiles(m_OutputFolder, "*.*", SearchOption.AllDirectories)
             .Where(s => s.EndsWith(".gcode"));
@@ -97,7 +99,8 @@ namespace FirstService
         public byte[] GetImageBytes(string message)
         {
             Console.WriteLine("GetImageBytes: Message is {0} received at {1}", message, DateTime.Now);
-            string afilePath = @"C:\dev\git\wcf_tut\First\FirstService\images2\" + message;//tests0000.png";
+            //string afilePath = @"C:\dev\git\wcf_tut\First\FirstService\images2\" + message;//tests0000.png";
+            string afilePath = @"C:\dev\slices\test.slice\" + message; // C:\dev\git\wcf_tut\First\FirstService\images2\"; 
             return System.IO.File.ReadAllBytes(afilePath);
         }
     }

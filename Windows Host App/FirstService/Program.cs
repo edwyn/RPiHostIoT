@@ -11,7 +11,7 @@ namespace FirstService
     {
         static void Main(string[] args)
         {
-            const string serviceURL = "net.tcp://192.168.0.109/MyFirstService";//"http://192.168.0.109:8732/Design_Time_Addresses/MyFirstService";
+            const string serviceURL = "net.tcp://192.168.0.107/MyFirstService";//"http://192.168.0.109:8732/Design_Time_Addresses/MyFirstService";
 
             var serviceHost = new ServiceHost(typeof(Service));
             
