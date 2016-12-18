@@ -18,10 +18,12 @@ namespace BlinkyWebService
 
         public void InitializeConnection(string vid, string pid)
         {
-            //currently hardcoded
-            usb = new UsbSerial("VID_2341", "PID_0010"); //Arduino available in Lantern
+            //currently hardcoded VID_0403 PID_6001
+            //usb = new UsbSerial("VID_2341", "PID_0010"); //Arduino available in Lantern
+            usb = new UsbSerial("VID_0403", "PID_6001"); //Arduino available in LCD Printer
             usb.ConnectionEstablished += OnConnectionEstablished;
-            usb.begin(250000, SerialConfig.SERIAL_8N1);
+            //usb.begin(250000, SerialConfig.SERIAL_8N1);
+            usb.begin(115200, SerialConfig.SERIAL_8N1);
         }
 
         private void OnConnectionEstablished()
@@ -39,6 +41,29 @@ namespace BlinkyWebService
                 var buffer = Encoding.ASCII.GetBytes(command).ToArray();
                 usbcheck = usb.write(buffer);
                 usb.flush();
+            }
+
+            if(command.Contains("M114"))
+            {
+                bool isRead = true;
+                ushort usbavt;
+                byte t;
+                List<byte> _ByteList = new List<byte>();
+
+                ushort readBuf = usb.read();
+                while (isRead)
+                {
+                    // usb.@lock();
+                    usbavt = usb.available();
+                    t = (byte)readBuf;
+                    _ByteList.Add(t);
+                    if (usbavt == 0)
+                    {
+                        //no more data to read
+                        isRead = false;
+                    }
+                    readBuf = usb.read();
+                }
             }
 
         }

@@ -101,6 +101,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AxisControl.cs" />
     <Compile Include="BuildManager.cs" />
     <Compile Include="GCodeFile.cs" />
     <Compile Include="IService.cs" />
