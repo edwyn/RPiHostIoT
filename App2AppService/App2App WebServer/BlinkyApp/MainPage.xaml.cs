@@ -26,7 +26,7 @@ namespace BlinkyWebService
         {
             InitializeComponent();
             //InitGPIO();
-            GpioStatus.Text = "GPIO pin not initialized - Disabled";
+            //GpioStatus.Text = "GPIO pin not initialized - Disabled";
             InitAppSvc();
         }
 
@@ -65,8 +65,9 @@ namespace BlinkyWebService
             bm = new BuildManager();
             zaxis = new AxisControl();
 
-            //initialize USB serial connection
-            zaxis.InitializeConnection("VID_2341", "PID_0010");
+            //initialize USB serial connection VID_0403 PID_6001 - LCD printer
+            //zaxis.InitializeConnection("VID_2341", "PID_0010");
+            zaxis.InitializeConnection("VID_0403", "PID_6001");
 
 
             tokenSource = new CancellationTokenSource();
@@ -89,27 +90,27 @@ namespace BlinkyWebService
         ///
         ///called from buildmanager
         ///
-        public async void Printstarted(int layer)
-        {
-            await Dispatcher.RunAsync(
-                CoreDispatcherPriority.High,
-                () =>
-                {
-                    GpioStatus.Text = "Print started layer " + layer.ToString();
-                }
-                );
-        }
+     //   public async void Printstarted(int layer)
+       // {
+       //     await Dispatcher.RunAsync(
+       //         CoreDispatcherPriority.High,
+       //         () =>
+       //         {
+       //             GpioStatus.Text = "Print started layer " + layer.ToString();
+        //        }
+        //        );
+       // }
 
-        public async void PrintDelay(int delaytime)
-        {
-            await Dispatcher.RunAsync(
-                CoreDispatcherPriority.High,
-                () =>
-                {
-                    GpioStatus.Text = "Print delaytime " + delaytime.ToString();
-                }
-                );
-        }
+       // public async void PrintDelay(int delaytime)
+       // {
+       //     await Dispatcher.RunAsync(
+       //         CoreDispatcherPriority.High,
+      //          () =>
+      //          {
+      //              GpioStatus.Text = "Print delaytime " + delaytime.ToString();
+      //          }
+      //          );
+      //  }
 
         public async void SetImage(int index)
         {
@@ -143,24 +144,32 @@ namespace BlinkyWebService
             var message = args.Request.Message;
             string newState = message["State"] as string;
             string axisControl = message["AxisState"] as string;
+            string axisValue = message["AxisValue"] as string;
             // string startState = message["Start"] as string;
             //if ()
-            if (newState.Length > 0 )
+            if (newState.Length > 0 && newState != "Unspecified" )
             {
-                PrintState(newState);
+                   PrintState(newState);
             }
 
-            if (axisControl.Length > 0)
+            else if (axisControl.Length > 0 && axisControl != "Unspecified")
             {
-                AxisState(axisControl);
+                AxisState(axisControl, axisValue);
             }
 
 
         }
 
-        private async void AxisState(string axisState)
+        private async void AxisState(string axisState, string axisValue)
         {
-
+            if(zaxis.UsbConnectionType)
+            {
+                zaxis.SendCommandToDevice("M114\n");
+                zaxis.SendCommandToDevice("G91\n");
+                zaxis.SendCommandToDevice("G1 F150\n");
+                zaxis.SendCommandToDevice("G1 Z" +axisValue+"\n");
+                zaxis.SendCommandToDevice("G90\n");
+            }
         }
 
         private async void PrintState(string printState)
@@ -203,7 +212,7 @@ namespace BlinkyWebService
                                     //Cleanup();
                                 }
 
-                                GpioStatus.Text = "Print Ready";
+                               // GpioStatus.Text = "Print Ready";
                             });
 
                         //foreach (var item in m_sf.Imgs((value, i) => new { i, value }))
@@ -275,6 +284,18 @@ namespace BlinkyWebService
 
                         break;
                     }
+                case "Test_ON":
+                    {
+                        SetImage(1);
+                        zaxis.SendCommandToDevice("M106 S200\n");
+                        break;
+                    }
+                case "Test_OFF":
+                    {
+                        SetImage(-1);
+                        zaxis.SendCommandToDevice("M106 S0\n");
+                        break;
+                    }
                 case "Unspecified":
                 default:
                     {
@@ -291,7 +312,7 @@ namespace BlinkyWebService
         private void RetrieveData()
         {
             //setup wcf service
-            const string serviceURL = "net.tcp://192.168.0.109/MyFirstService";
+            const string serviceURL = "net.tcp://192.168.0.107/MyFirstService";
             var tcpBinding = new NetTcpBinding();
             tcpBinding.Security.Transport.ClientCredentialType =
                 TcpClientCredentialType.Windows;
