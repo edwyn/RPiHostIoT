@@ -22,3 +22,8 @@ the 2 apps use appServiceConnection to communicate with each other.
 
 ## appServiceConnection
 Represents a connection to the endpoint for an app service. App services enable app-to-app communication by allowing you to provide services from your Universal Windows app to other Universal Windows apps.
+
+
+## windows host app
+to be-able to receive the sliced files and gcode, a windows host app has been created. file transfer is done via WCF
+sofar ip's are hardcoded in there
