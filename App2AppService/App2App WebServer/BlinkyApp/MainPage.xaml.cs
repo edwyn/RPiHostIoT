@@ -151,7 +151,6 @@ namespace BlinkyWebService
             {
                    PrintState(newState);
             }
-
             else if (axisControl.Length > 0 && axisControl != "Unspecified")
             {
                 AxisState(axisControl, axisValue);
@@ -238,6 +237,11 @@ namespace BlinkyWebService
                     }
                 case "Off":
                     {
+                        if(bm.PrintingProcess)
+                        {
+                            bm.PrintingProcess = false;
+                            zaxis.SendCommandToDevice("M106 S0\n");
+                        }
                         //await Dispatcher.RunAsync(
                         //CoreDispatcherPriority.High,
                         //() =>
@@ -252,7 +256,7 @@ namespace BlinkyWebService
 
                         //Starting main printer task
                         var token = tokenSource.Token;
-                        printerTask = Task.Factory.StartNew(() => bm.StartPrint(m_sf, m_gcode, this), token);
+                        printerTask = Task.Factory.StartNew(() => bm.StartPrint(m_sf, m_gcode, zaxis, this), token);
                         /* if (m_sf.Imgs != null)
                          { 
                              foreach (var image in m_sf.Imgs)

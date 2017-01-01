@@ -37,10 +37,12 @@ namespace BlinkyWebService
                                 //int m_state = STATE_IDLE; // the state machine variable
 
         private MainPage m_main;
+
+        private AxisControl m_zaxis;
         public int printing_state { get; set; }
         public bool PrintingProcess { get; set; }
 
-        public void StartPrint(SlicedFiles sf, GCodeFile m_gcode, MainPage m_page)
+        public void StartPrint(SlicedFiles sf, GCodeFile m_gcode, AxisControl zaxis, MainPage m_page)
         {
 
             if (Printing)
@@ -49,13 +51,14 @@ namespace BlinkyWebService
             slicefiles = sf;
             gcode = m_gcode;
             m_main = m_page;
+            m_zaxis = zaxis;
 
             Printing = true;
 
             printing_state = STATE_START;
             PrintingProcess = true;
 
-            m_main.Printstarted(0);
+           // m_main.Printstarted(0);
             Process();
 
             //m_page.SetImage(0);
@@ -169,13 +172,13 @@ namespace BlinkyWebService
                                 // send  the line, whether or not it's a comment - this is for a reason....
                                 // should check to see if the firmware is ready for another line
 
-
+                                m_zaxis.SendCommandToDevice(line + "\r\n");
                                 //Todo UVDLPApp.Instance().m_deviceinterface.SendCommandToDevice(line + "\r\n");
 
                                 if (line.ToLower().Contains("<delay> ")) // get the delay
                                 {
                                     int delaytime = getvarfromline(line);
-                                    m_main.PrintDelay(delaytime);
+                                   // m_main.PrintDelay(delaytime);
                                     nextlayertime = GetTimerValue() + delaytime;
                                     printing_state = STATE_WAITING_FOR_DELAY;
                                     continue;
