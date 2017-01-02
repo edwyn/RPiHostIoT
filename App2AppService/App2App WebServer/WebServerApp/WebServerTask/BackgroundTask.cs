@@ -39,6 +39,7 @@ namespace WebServerTask
                 appServiceConnection = appService.AppServiceConnection;
                 appServiceConnection.RequestReceived += OnRequestReceived;
             }
+
         }
 
         private async void OnRequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
@@ -53,7 +54,7 @@ namespace WebServerTask
                         var messageDeferral = args.GetDeferral();
                         //Set a result to return to the caller
                         var returnMessage = new ValueSet();
-                        HttpServer server = new HttpServer(8000, appServiceConnection);
+                        server = new HttpServer(8000, appServiceConnection);
                         
                         IAsyncAction asyncAction = Windows.System.Threading.ThreadPool.RunAsync(
                             (workItem) =>
@@ -73,6 +74,14 @@ namespace WebServerTask
                         serviceDeferral.Complete();
                         break;
                     }
+                case "Slice":
+                    {
+                        var slice_number = message["SliceNumber"];
+                        var total_slice_number = message["TotalSliceNumber"];
+                        server.SliceName = (string)slice_number;
+                        server.TotalSliceName = (string)total_slice_number;
+                        break;
+                    }
             }
         }
         private void OnCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
@@ -82,6 +91,7 @@ namespace WebServerTask
 
         BackgroundTaskDeferral serviceDeferral;
         AppServiceConnection appServiceConnection;
+        HttpServer server;
     }
 
     
@@ -92,18 +102,53 @@ namespace WebServerTask
         // string offHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" checked onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form></body></html>";
         // string onHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" checked onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start</form></body></html>";
         // string startHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\"  onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" checked onclick=\"this.form.submit()\"> Start</form></body></html>";
-        string offHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" checked onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start<br><input type=\"radio\" name=\"state\" value=\"test_on\" onclick=\"this.form.submit()\"> Test_On<br><input type=\"radio\" name=\"state\" value=\"test_off\" onclick=\"this.form.submit()\"> Test_Off</form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"^ 10\" onclick=\"window.location.href=\'test.html?axis=up10.0\';\"/><br><br><input type=\"button\" value=\"^ 1.0\" onclick=\"window.location.href=\'test.html?axis=up01.0\';\"/><br><br><input type=\"button\" value=\"^ 0.1\" onclick=\"window.location.href=\'test.html?axis=up00.1\';\"/><br></form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"v 0.1\" onclick=\"window.location.href=\'test.html?axis=down00.1\';\"/><br><br><input type=\"button\" value=\"v 1.0\" onclick=\"window.location.href=\'test.html?axis=down01.0\';\"/><br><br><input type=\"button\" value=\"v 10\" onclick=\"window.location.href=\'test.html?axis=down10.0\';\"/><br></form></body></html>";
-        string onHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" checked onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start<br><input type=\"radio\" name=\"state\" value=\"test_on\" onclick=\"this.form.submit()\"> Test_On<br><input type=\"radio\" name=\"state\" value=\"test_off\" onclick=\"this.form.submit()\"> Test_Off</form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"^ 10\" onclick=\"window.location.href=\'test.html?axis=up10.0\';\"/><br><br><input type=\"button\" value=\"^ 1.0\" onclick=\"window.location.href=\'test.html?axis=up01.0\';\"/><br><br><input type=\"button\" value=\"^ 0.1\" onclick=\"window.location.href=\'test.html?axis=up00.1\';\"/><br></form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"v 0.1\" onclick=\"window.location.href=\'test.html?axis=down00.1\';\"/><br><br><input type=\"button\" value=\"v 1.0\" onclick=\"window.location.href=\'test.html?axis=down01.0\';\"/><br><br><input type=\"button\" value=\"v 10\" onclick=\"window.location.href=\'test.html?axis=down10.0\';\"/><br></form></body></html>";
-        string startHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\"  onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" checked onclick=\"this.form.submit()\"> Start<br><input type=\"radio\" name=\"state\" value=\"test_on\" onclick=\"this.form.submit()\"> Test_On<br><input type=\"radio\" name=\"state\" value=\"test_off\" onclick=\"this.form.submit()\"> Test_Off</form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"^ 10\" onclick=\"window.location.href=\'test.html?axis=up10.0\';\"/><br><br><input type=\"button\" value=\"^ 1.0\" onclick=\"window.location.href=\'test.html?axis=up01.0\';\"/><br><br><input type=\"button\" value=\"^ 0.1\" onclick=\"window.location.href=\'test.html?axis=up00.1\';\"/><br></form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"v 0.1\" onclick=\"window.location.href=\'test.html?axis=down00.1\';\"/><br><br><input type=\"button\" value=\"v 1.0\" onclick=\"window.location.href=\'test.html?axis=down01.0\';\"/><br><br><input type=\"button\" value=\"v 10\" onclick=\"window.location.href=\'test.html?axis=down10.0\';\"/><br></form></body></html>";
+        // private HttpParser m_this = new HttpParser();
+        // private const string offHTMLString = m_this.getOffHTML();
+        // string offHtmlString = HttpParser.HtmlFormatOff;
+        // string onHtmlString = HttpParser.HtmlFormatOn;
+        // string startHtmlString = HttpParser.HtmlFormatStart;
+        string offHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" checked onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start<br><input type=\"radio\" name=\"state\" value=\"test_on\" onclick=\"this.form.submit()\"> Test_On<br><input type=\"radio\" name=\"state\" value=\"test_off\" onclick=\"this.form.submit()\"> Test_Off</form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"^ 10\" onclick=\"window.location.href=\'test.html?axis=up10.0\';\"/><br><br><input type=\"button\" value=\"^ 1.0\" onclick=\"window.location.href=\'test.html?axis=up01.0\';\"/><br><br><input type=\"button\" value=\"^ 0.1\" onclick=\"window.location.href=\'test.html?axis=up00.1\';\"/><br></form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"v 0.1\" onclick=\"window.location.href=\'test.html?axis=down00.1\';\"/><br><br><input type=\"button\" value=\"v 1.0\" onclick=\"window.location.href=\'test.html?axis=down01.0\';\"/><br><br><input type=\"button\" value=\"v 10\" onclick=\"window.location.href=\'test.html?axis=down10.0\';\"/><br></form><iframe src='slice.html'></iframe></body></html>";
+        string onHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\" checked onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" onclick=\"this.form.submit()\"> Start<br><input type=\"radio\" name=\"state\" value=\"test_on\" onclick=\"this.form.submit()\"> Test_On<br><input type=\"radio\" name=\"state\" value=\"test_off\" onclick=\"this.form.submit()\"> Test_Off</form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"^ 10\" onclick=\"window.location.href=\'test.html?axis=up10.0\';\"/><br><br><input type=\"button\" value=\"^ 1.0\" onclick=\"window.location.href=\'test.html?axis=up01.0\';\"/><br><br><input type=\"button\" value=\"^ 0.1\" onclick=\"window.location.href=\'test.html?axis=up00.1\';\"/><br></form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"v 0.1\" onclick=\"window.location.href=\'test.html?axis=down00.1\';\"/><br><br><input type=\"button\" value=\"v 1.0\" onclick=\"window.location.href=\'test.html?axis=down01.0\';\"/><br><br><input type=\"button\" value=\"v 10\" onclick=\"window.location.href=\'test.html?axis=down10.0\';\"/><br></form><iframe src='slice.html'></iframe></body></html>";
+        string startHtmlString = "<html><head><title>Blinky App</title></head><body><form action=\"blinky.html\" method=\"GET\"><input type=\"radio\" name=\"state\" value=\"on\"  onclick=\"this.form.submit()\"> On<br><input type=\"radio\" name=\"state\" value=\"off\" onclick=\"this.form.submit()\"> Off<br><input type=\"radio\" name=\"state\" value=\"start\" checked onclick=\"this.form.submit()\"> Start<br><input type=\"radio\" name=\"state\" value=\"test_on\" onclick=\"this.form.submit()\"> Test_On<br><input type=\"radio\" name=\"state\" value=\"test_off\" onclick=\"this.form.submit()\"> Test_Off</form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"^ 10\" onclick=\"window.location.href=\'test.html?axis=up10.0\';\"/><br><br><input type=\"button\" value=\"^ 1.0\" onclick=\"window.location.href=\'test.html?axis=up01.0\';\"/><br><br><input type=\"button\" value=\"^ 0.1\" onclick=\"window.location.href=\'test.html?axis=up00.1\';\"/><br></form><form action=\"\"><input type=\"button\" name=\"axis\" value=\"v 0.1\" onclick=\"window.location.href=\'test.html?axis=down00.1\';\"/><br><br><input type=\"button\" value=\"v 1.0\" onclick=\"window.location.href=\'test.html?axis=down01.0\';\"/><br><br><input type=\"button\" value=\"v 10\" onclick=\"window.location.href=\'test.html?axis=down10.0\';\"/><br></form><iframe src='slice.html'></iframe></body></html>";
 
         private const uint BufferSize = 8192;
         private int port = 8000;
         private readonly StreamSocketListener listener;
         private AppServiceConnection appServiceConnection;
+        //public string m_slicenr;
 
         public String ConnectionType { get; set; }    
 
         private ObservableCollection<DeviceInformation> listOfDevices = new ObservableCollection<DeviceInformation>();
+
+        private string slicename;
+        public string SliceName
+        {
+            get
+            {
+                return this.slicename;
+            }
+            set
+            {
+                this.slicename = value;
+            }
+        }
+
+        private string totalslicename;
+
+        public string TotalSliceName
+        {
+            get
+            {
+                return this.totalslicename;
+            }
+            set
+            {
+                this.totalslicename = value;
+            }
+        }
+
+
 
         private async void ListAvailablePorts()
         {
@@ -153,6 +198,9 @@ namespace WebServerTask
             listener = new StreamSocketListener();
             port = serverPort; 
             appServiceConnection = connection;
+            //m_slicenr = "-1";
+            SliceName = "-1";
+            TotalSliceName = "-1";
             listener.ConnectionReceived += (s, e) => ProcessRequestAsync(e.Socket);
         }
 
@@ -209,7 +257,7 @@ namespace WebServerTask
             string axisValue = "";
             bool stateChanged = false;
 
-           // ListAvailablePorts();
+            // ListAvailablePorts();
 
             string html = offHtmlString; // default off
             if (request.Contains("blinky.html?state=on"))
@@ -234,13 +282,13 @@ namespace WebServerTask
             {
                 state = "Test_ON";
                 stateChanged = true;
-                html = startHtmlString;
+                html = offHtmlString;
             }
             else if (request.Contains("blinky.html?state=test_off"))
             {
                 state = "Test_OFF";
                 stateChanged = true;
-                html = startHtmlString;
+                html = offHtmlString;
             }
             else if(request.Contains("test.html?axis="))
             {
@@ -260,6 +308,12 @@ namespace WebServerTask
                 {
                     axisValue = sub;
                 }
+            }
+            else if(request.Contains("slice.html"))
+            {
+                //don't send any commands to backend just show current slice number
+                html = "<html><head><meta http-equiv=\"refresh\" content=\"5\" /></head><body></body>Current Slice :" + SliceName +"/"+ TotalSliceName + "</html>";
+                stateChanged = false;
             }
             
 

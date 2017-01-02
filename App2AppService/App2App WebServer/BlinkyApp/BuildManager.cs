@@ -208,6 +208,9 @@ namespace BlinkyWebService
                                     {
                                         m_curlayer = layer;
                                         m_main.SetImage(m_curlayer);
+
+                                        //communicate current layer to website
+                                        m_main.SendSliceToHTTP(m_curlayer);
                                     }
                                 }
                             }

@@ -111,6 +111,18 @@ namespace BlinkyWebService
       //          }
       //          );
       //  }
+        public async void SendSliceToHTTP(int index)
+        {
+            var message = new ValueSet();
+            message.Add("Command", "Slice");
+            message.Add("SliceNumber", index.ToString());
+            message.Add("TotalSliceNumber", numberofslices);
+            var response = await appServiceConnection.SendMessageAsync(message);
+            if (response.Status != AppServiceResponseStatus.Success)
+            {
+                throw new Exception("Failed to send message");
+            }
+        }
 
         public async void SetImage(int index)
         {
@@ -341,6 +353,16 @@ namespace BlinkyWebService
             //Receive Gcode file as string array, each item in the array representing a line
             string[] gcodelines = proxy.SendGcode(string.Format("{0}", Guid.NewGuid()));
             m_gcode.Lines = gcodelines;
+
+            for(int i =0; i < gcodelines.Length; i++)
+            {
+                string temp = gcodelines[i];
+                if (temp.Contains("Number of Slices"))
+                {
+                    numberofslices = temp.Substring(temp.IndexOf("=")+3);
+                    i = gcodelines.Length;
+                }
+            }
             
             //Receive byte array per image and store 
             byte[][] images = new byte[filename.Length][];
@@ -355,6 +377,7 @@ namespace BlinkyWebService
         private const int LED_PIN = 5;
         private SlicedFiles m_sf;
         private GCodeFile m_gcode = null; // a reference from the active gcode file
+        private string numberofslices = null;
         private Task printerTask = null;
         private CancellationTokenSource tokenSource = null;// = new CancellationTokenSource();
         private BuildManager bm;
